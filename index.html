@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<title>A_nim</title>
+<head>
+<link rel="stylesheet" href="style.css">
+
+
+
+<!-- gif  -->
+<script type="text/javascript" src="lib/jsgif/LZWEncoder.js"></script>
+<script type="text/javascript" src="lib/jsgif/NeuQuant.js"></script>
+<script type="text/javascript" src="lib/jsgif/GIFEncoder.js"></script>
+<script type="text/javascript" src="lib/jsgif/b64.js"></script>
+<!-- lib -->
+<script type="text/javascript" src="lib/paper-full.js"></script>
+<!-- script -->
+<script type="text/paperscript" src="src/model.js" canvas = 'myCanvas'></script>
+<script type="text/paperscript" src="src/buttons.js" canvas = 'myCanvas'></script>
+<script type="text/paperscript" src="src/tools.js" canvas = 'myCanvas'></script>
+
+
+</head>
+<div class="sidenav">
+    <!-- <h1>Tools</h1> -->
+    <div id = 'tools'>
+        <a id = "VC" onclick="activateVC();" class = "tool active">
+            <img src="icons/vectorCreator.png" alt="Draw">
+        </a>
+        <a id = "VE" onclick="activateVE();" class = "tool">
+            <img src="icons/vectorEditor.png" alt="Select">
+        </a>
+        <a id = "PE" onclick="activatePE();" class = "tool">
+            <img src="icons/pointEditor.png" alt="Select Point">
+        </a>
+        <a id = "PE" onclick="activateA();" class = "tool">
+            <img src="icons/animation.png" alt="Animate">
+        </a>
+
+        <a class = "btn">
+            <input type="color" id="fillColor" name="fillColor"value="#af70eb">     
+        </a>
+        <a class = "btn">
+            <input type="color" id="strokeColor" name="strokeColor" value="#f6b73c">
+        </a>
+
+        <label for="import" class="btn"><img src="icons/import.png" alt="Import"></label>
+
+        <input id="import" class="input-file" type="file" accept=".svg">
+
+            <!-- <img src="icons/import.png" alt="Import"> -->
+        </a>
+        <a id = "export" class ="btn" >
+            <img src="icons/save.png" alt="Select Point">
+        </a>
+    </div>
+</div>
+
+
+<body>
+    
+    <!-- <h1>Canvas</h1> -->
+    <canvas id='myCanvas' width='1000' height='600'>
+        Canvas not supported
+    </canvas>
+
+    <h1></h1>
+    <a href = "#" id = "counter" class = "switch" >1/1</a>
+    <a id ="previousFrame" class = "switch">
+        <img src="icons/next.png" alt="Previous" style = " transform: scaleX(-1);">
+    </a>
+    <a id ="nextFrame" class = "switch">
+        <img src="icons/next.png" alt="Next">
+    </a>
+    <a id ="newFrame" class = "switch">
+        <img src="icons/new.png" alt="New">
+    </a>
+    <a id ="deleteFrame" class = "switch" >
+        <img src="icons/delete.png" alt="Delete">
+    </a>
+
+    <a id ="play" class = "switch">
+         
+        <img src="icons/play.png" alt="Play">
+        Play
+    </a>
+
+
+    
+
+    <!-- <h1>Tools</h1>
+    <div id = 'tools'>
+        <a onclick="activateVectorCreator();" class = "tool active">
+            <img src="icons/vectorCreator.png" alt="Draw">
+        </a>
+        <a onclick="activateVectorEditor();" class = "tool">
+            <img src="icons/vectorEditor.png" alt="Select">
+        </a>
+        <a onclick="activatePointEditor();" class = "tool">
+            <img src="icons/pointEditor.png" alt="Select Point">
+        </a>
+    </div> -->
+    
+<!-- 
+
+    <h1>Style</h1>
+    <div id = 'box'>
+        <input type="color" id="fillColor" name="fillColor"
+        value="#af70eb">
+        <label for="fillColor">Fill Color</label>
+    </div>
+    <div id = 'box'>
+        <input type="color" class="input-color-picker" id="strokeColor" name="strokeColor"
+            value="#f6b73c">
+        <label for="strokeColor">Stroke Color</label>
+    </div>
+    <div id = 'box'>
+        <div class="slidecontainer">
+            <input type="range" min="0" max="100" value="5" class="slider" id="strokeSlider" >
+        </div> 
+    </div> -->
+    
+    
+</body>
+</html>
+
