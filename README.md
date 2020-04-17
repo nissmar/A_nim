@@ -1,7 +1,7 @@
 
 # A_nim
 
-<img src="A_nim.gif" style="width:50%;height:50%;">
+<img src="A_nim.gif">
 
 
 This a project I developped on my spare time. Based on Paper.js, it allows the user to create custom gifs using vector graphics.
