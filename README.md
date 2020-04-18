@@ -66,4 +66,4 @@ $ python -m SimpleHTTPServer
 ```
 
 
-Next, go to `http://localhost:8080` in your favorite web browser and enjoy!
+Next, go to `http://localhost:8000` in your favorite web browser and enjoy!
