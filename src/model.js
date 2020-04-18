@@ -73,7 +73,7 @@ document.getElementById("newFrame").onclick = function() { //moving to next fram
         currentFrame.currentPath.fullySelected = false;
         currentFrame.currentPath = null;
     };
-    console.log('new frame');
+    // console.log('new frame');
     for (var i = 0; i<currentFrame.paths.length; i++) newF.paths.push(currentFrame.paths[i].clone());
     projectFrames.frames.splice( projectFrames.currentN + 1, 0, newF);
     projectFrames.currentN++;

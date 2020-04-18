@@ -35,10 +35,12 @@ document.getElementById("import").onchange = function() {
         console.log(item);
         item.scale(1,view.size.width/view.size.height);
         currentFrame.paths.push(item);
+        console.log(currentFrame.paths);
       }
   }
 
   project.importSVG(fichierSelectionne,options);
+ 
   
 
 }
