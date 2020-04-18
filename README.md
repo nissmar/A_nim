@@ -57,7 +57,7 @@ Shortcuts can be pretty useful when working with A_nim:
 First download the `.zip` file. Then in your terminal type:
 
 ```shell
-$ cd Downloads/A_nim
+$ cd Downloads/A_nim-master
 ```
 
 You have to setup a local server in order to run A_nim. Try:
