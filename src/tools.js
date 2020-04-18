@@ -181,10 +181,8 @@ vectorEditor.onMouseDown = function(event) {
     }
     else {
         if (hit != null) {
-            console.log(hit.item.index);
             currentFrame.currentPath =  new Group();
             currentFrame.currentPath.addChild(hit.item);
-            console.log(hit.item.index);
             currentFrame.selectedpoint = null;
             createRect(currentFrame.currentPath);
            
@@ -401,10 +399,11 @@ pointEditor.onKeyDown = function(event){
 
 //animator
 animator.onMouseDown = function(event) {
-    console.log('current Path : ', currentFrame.currentPath.children);
+    // console.log('current Path : ', currentFrame.currentPath.children);
 
     if (animpath != null) {
         animpath.remove();
+        animpath = null;
     }
     if (currentFrame.currentPath != null) {
         animpath = new Path();
@@ -419,7 +418,7 @@ animator.onMouseDown = function(event) {
 
 
 animator.onMouseDrag = function(event) {
-    if (animpath != null) {
+    if (animpath != null ) {
         animpath.add(event.point);
     }
 
@@ -446,34 +445,42 @@ animator.onMouseUp = function(event) {
         for (var i=1;i<10;i++){
 
             if (projectFrames.currentN<projectFrames.frames.length-1) {
-                console.log('next');
+                // console.log('next');
                 document.getElementById('nextFrame').click();
-                var npath = null;
+                // var npath = null;
                 for (var j=0; j<animpaths.length;j++) {
-                    npath = animpaths[j].clone()
-                    currentFrame.paths.push(npath);
 
-                    animpaths[j] = npath;
+                    if (index[j]>=currentFrame.paths.length) {
+                        currentFrame.paths.push(animpaths[j].clone());
+
+                    }
+                    animpaths[j] = currentFrame.paths[index[j]]
+                    
+                    // currentFrame.paths.push(npath);
+
+                    // animpaths[j] = npath;
                 }
             }
             else {
                 
                 document.getElementById('newFrame').click();
-                for (var j=0; j<animpaths.length;j++) {
-                    animpaths[j] = currentFrame.paths[index[j]];
-                }
+                // for (var j=0; j<animpaths.length;j++) {
+                //     animpaths[j] = currentFrame.paths[index[j]];
+                // }
             }
             
             for (var j=0; j<index.length;j++) {
                 console.log('j',index[j], currentFrame.paths);
-                // currentFrame.paths[index[j]].position += animpath.getLocationAt(i*animpath.length/10).point-animpath.getLocationAt((i-1)*animpath.length/10).point;
-                animpaths[j].position += animpath.getLocationAt(i*animpath.length/10).point-animpath.getLocationAt((i-1)*animpath.length/10).point;
+                currentFrame.paths[index[j]].position += animpath.getLocationAt(i*animpath.length/10).point-animpath.getLocationAt((i-1)*animpath.length/10).point;
+                // animpaths[j].position += animpath.getLocationAt(i*animpath.length/10).point-animpath.getLocationAt((i-1)*animpath.length/10).point;
 
             }
         }
         animpath.remove();
         animpath = null;
     }
+    currentFrame.currentPath = null;
+
 }
 
 animator.onKeyDown = function(event) {
