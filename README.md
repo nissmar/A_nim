@@ -64,6 +64,11 @@ You have to setup a local server in order to run A_nim. Try:
 ```shell
 $ python -m SimpleHTTPServer
 ```
+or :
+
+```shell
+$ php -S localhost:8000
+```
 
 
 Next, go to `http://localhost:8000` in your favorite web browser and enjoy!
