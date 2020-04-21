@@ -6,14 +6,15 @@ currentStyle = {
     fillColor: document.getElementById("fillColor").value,
 }
 
-
+//ANIMATION:
+var running = false;
 
 //frames
 function createFrame() {
     newFrame = {
-        currentPath : null, //the selected path
-        selectionMode : null, //"null", "bound", "point"
+        selectedItems : [],
         rectangle : null, //the bounding rectangle
+        rectangleCenter : null,
         paths : [], //all paths 
         selectedpoint : null, //the selected point
     }
@@ -24,26 +25,26 @@ function createFrame() {
 currentFrame = createFrame();
 
 projectFrames = {
+    ID: 0,
     currentN : 0, //current frame
     frames : [currentFrame], //all frames
     delay : 100,
-}
+}    
 
 
 //frames
 function updateFrame() { //used when changing frame
     // console.log((projectFrames.currentN + 1));
-    
-    currentFrame.currentPath = null;
+   
+    currentFrame.selectedItems = [];
     currentFrame.selectedpoint = null;
-    currentFrame.selectionMode = null;
     if (currentFrame.rectangle != null) {
         currentFrame.rectangle.remove();
         currentFrame.rectangle = null;
     }
     for (var i = 0; i<currentFrame.paths.length; i++) {
         currentFrame.paths[i].visible = false;
-        currentFrame.paths[i].fullySelected = false;
+        currentFrame.paths[i].selected = false;
     }   
     currentFrame = projectFrames.frames[projectFrames.currentN];
     for (var i = 0; i<currentFrame.paths.length; i++) {
@@ -69,10 +70,7 @@ document.getElementById("nextFrame").onclick = function() { //moving to next fra
 document.getElementById("newFrame").onclick = function() { //moving to next frame
     // projectFrames.currentN++;
     var newF = createFrame();
-    if (currentFrame.currentPath != null) {
-        currentFrame.currentPath.fullySelected = false;
-        currentFrame.currentPath = null;
-    };
+    for (var j=0; j<currentFrame.selectedItems.length;j++) currentFrame.selectedItems[j].selected = false;
     // console.log('new frame');
     for (var i = 0; i<currentFrame.paths.length; i++) newF.paths.push(currentFrame.paths[i].clone());
     projectFrames.frames.splice( projectFrames.currentN + 1, 0, newF);
@@ -104,11 +102,16 @@ document.getElementById("deleteFrame").onclick = function() { //moving to next f
 }
 
 document.getElementById("play").onclick = function() {    
-    projectFrames.currentN = -1;
-    for (var i = 0; i< projectFrames.frames.length; i++) {
-        // console.log("i : ",i);
-        setTimeout(function() {projectFrames.currentN ++; updateFrame();}, projectFrames.delay*i); 
+    if (!running) {
+        running = true;
+        projectFrames.currentN = -1;
+        for (var i = 0; i< projectFrames.frames.length; i++) {
+            // console.log("i : ",i);
+            setTimeout(function() {projectFrames.currentN ++; updateFrame();}, projectFrames.delay*i); 
+        }
+        setTimeout(function() {running = false;}, projectFrames.delay*projectFrames.frames.length); 
     }
+    
 }
 
 

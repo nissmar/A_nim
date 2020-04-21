@@ -2,15 +2,15 @@
 //interactions
 document.getElementById("fillColor").onchange = function() { //modifying fillcolor
     currentStyle.fillColor = document.getElementById("fillColor").value;
-    if (currentFrame.currentPath != null) {
-        currentFrame.currentPath.fillColor = currentStyle.fillColor;
+    for (var j=0; j<currentFrame.selectedItems.length;j++) {
+      currentFrame.selectedItems[j].fillColor = currentStyle.fillColor;
     }
 }
 
 document.getElementById("strokeColor").onchange = function() { //modifying strokecolor
     currentStyle.strokeColor = document.getElementById("strokeColor").value;
-    if (currentFrame.currentPath != null) {
-        currentFrame.currentPath.strokeColor = currentStyle.strokeColor;
+    for (var j=0; j<currentFrame.selectedItems.length;j++) {
+      currentFrame.selectedItems[j].strokeColor = currentStyle.strokeColor;
     }
 }
 
@@ -34,6 +34,8 @@ document.getElementById("import").onchange = function() {
     onLoad : function(item) {
         console.log(item);
         item.scale(1,view.size.width/view.size.height);
+        item.data.customID = projectFrames.ID;
+        projectFrames.ID++;
         currentFrame.paths.push(item);
         console.log(currentFrame.paths);
       }

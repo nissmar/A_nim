@@ -27,6 +27,7 @@ rect.fillColor = '#e0e0e0';
 
 //KEY SHORTCUTS
 function shortcut(event) {
+    // console.log("frame : ",currentFrame.selectedItems);
     // console.log('shortcut');
     if (event.key == "a") {
         document.getElementById('PE').click();
@@ -53,7 +54,7 @@ function shortcut(event) {
         document.getElementById('play').click();
     }
 
-    else if (event.key == "backspace" && currentFrame.currentPath == null) {
+    else if (event.key == "backspace" && currentFrame.selectedItems.length == 0) {
         projectFrames.currentN = -1;
         document.getElementById('nextFrame').click();
     }
@@ -68,8 +69,8 @@ function createPath() {
     var path = new Path();
     path.strokeColor = currentStyle.strokeColor;
     path.fullySelected = true;
-    // currentFrame.paths.push(path);
-    // currentFrame.currentPath = path;
+    path.data.customID = projectFrames.ID;
+    projectFrames.ID++;
     return path;
 }
 
@@ -80,6 +81,43 @@ function closePath(path) {
     path.strokeWidth = currentStyle.strokeWidth;
 }
 
+//selection management
+
+function emptySelectedItems(remove){
+    for (var j=0; j<currentFrame.selectedItems.length;j++) {
+        currentFrame.selectedItems[j].selected = false;
+        if (remove) {
+            currentFrame.selectedItems[j].remove();
+        }
+    } 
+    currentFrame.selectedItems = [];
+    currentFrame.selectedpoint = null;
+
+    if (currentFrame.rectangle != null) {
+        currentFrame.rectangle.remove();
+        currentFrame.rectangle = null;
+    }
+}
+
+function selectedItemsContain(point){
+    for (var j=0; j<currentFrame.selectedItems.length;j++) {
+        if (currentFrame.selectedItems[j].contains(point)) return true;
+    }
+    return false;
+}
+
+function setSelectedItemsStroke(){
+    for (var j=0; j<currentFrame.selectedItems.length;j++) {
+        currentFrame.selectedItems[j].strokeWidth = currentStyle.strokeWidth;
+    }
+}
+
+
+function moveSelectedItems(delta) {
+    for (var j=0; j <currentFrame.selectedItems.length;j++) {
+        currentFrame.selectedItems[j].position += delta;
+    }
+}
 //vector creator
 vectorCreator.onMouseDown = function(event) {
     if (newpath == null) {
@@ -91,15 +129,12 @@ vectorCreator.onMouseDown = function(event) {
             if ( (event.point - newpath.segments[0].point).length < mindistance) {
                 closePath(newpath);
                 currentFrame.paths.push(newpath);
-                currentFrame.currentPath = new Group([newpath]);
                 newpath = null;
             }
             else newpath.add(event.point);
         }
         else newpath.add(event.point);
     }
-    
-
 }
 
 
@@ -119,118 +154,144 @@ vectorCreator.onKeyDown = function(event) {
     shortcut(event);
 }
 
-//vector Editor
+//Rect
 
 
-function createRect(item) {
-    //creating bouding rect
-    bounds = item.bounds;
-    b = bounds.clone().expand(10,10);
-    currentFrame.rectangle = new Path.Rectangle(b);
-    currentFrame.rectangle.pivot = currentFrame.rectangle.position;
-    currentFrame.rectangle.insert(2, new Point(b.center.x, b.top));
-    currentFrame.rectangle.insert(2, new Point(b.center.x, b.top-25));
-    currentFrame.rectangle.insert(2, new Point(b.center.x, b.top));
-    currentFrame.rectangle.position = item.bounds.center;
-    currentFrame.rectangle.rotation = item.rotation;
-    currentFrame.rectangle.scaling = item.scaling;
-    currentFrame.rectangle.strokeWidth = 1;
-    currentFrame.rectangle.strokeColor = 'blue';
-    currentFrame.rectangle.name = "selection rectangle";
-    currentFrame.rectangle.selected = true;
-    currentFrame.rectangle.ppath = item;
-    currentFrame.rectangle.ppath.pivot = currentFrame.rectangle.pivot;
+function createRect() {
+    if (currentFrame.rectangle != null) {
+        currentFrame.rectangle.remove();
+    }
+   if (currentFrame.selectedItems.length != 0) {
+        var bounds = currentFrame.selectedItems[0].bounds;
+        for (var j=1; j<currentFrame.selectedItems.length;j++) {
+            bounds = bounds.unite(currentFrame.selectedItems[j].bounds);
+        }
+        b = bounds.clone().expand(10,10);
+        currentFrame.rectangle = new Path.Rectangle(b);
+        currentFrame.rectangle.pivot = currentFrame.rectangle.position;
+        currentFrame.rectangle.insert(2, new Point(b.center.x, b.top));
+        currentFrame.rectangle.insert(2, new Point(b.center.x, b.top-25));
+        currentFrame.rectangle.insert(2, new Point(b.center.x, b.top));
+        currentFrame.rectangle.position = b.center;
+       
+        currentFrame.rectangle.strokeWidth = 1;
+        currentFrame.rectangle.strokeColor = 'blue';
+        currentFrame.rectangle.name = "selection rectangle";
+        currentFrame.rectangle.selected = true;
+    }
+}
 
+function moveRect(delta) { //delta is a point
+    if (currentFrame.rectangle != null) {
+        currentFrame.rectangle.position += delta;
+        moveSelectedItems(delta);
+    } 
+}
+
+function rotateRect(alpha) { //alpha is an angle
+    if (currentFrame.rectangle != null) {
+        currentFrame.rectangle.rotate(alpha);
+        for (var j=0; j <currentFrame.selectedItems.length;j++) {
+            currentFrame.selectedItems[j].rotate(alpha,currentFrame.rectangle.position);
+        }
+    } 
+}
+
+function scaleRect(event,origin) {
+    if (currentFrame.rectangle != null) {
+        var c = event.point;
+        var d = event.delta;
+        
+        var ratiox = (c-origin).x / (c-d-origin).x;
+        var ratioy = (c-origin).y / (c-d-origin).y;
+
+        if (event.modifiers.shift) {
+            ratiox = ratioy;
+            ratioy = ratiox;
+        }
+        currentFrame.rectangle.scale(new Point(ratiox,ratioy),  origin);
+    
+        for (var j=0; j <currentFrame.selectedItems.length;j++) {
+            currentFrame.selectedItems[j].scale(new Point(ratiox,ratioy),  origin);
+        }
+    } 
 }
 
 
+
+// Vector editor
 vectorEditor.onMouseDown = function(event) {
 
     var hitOptions = {
         segments: true,
         stroke: true,
         // class: Group,
+        visible: true,
         handles : false,
         fill: true,
         tolerance: 5,
     };
     var hit = project.hitTest(event.point, hitOptions);
-    console.log(hit);
-    if (currentFrame.currentPath != null) {
-        if (event.modifiers.shift) {
-            if (hit != null) {
-                currentFrame.currentPath.addChild(hit.item);
-                currentFrame.rectangle.remove();
-                createRect(currentFrame.currentPath);
+    var it = null;
+    if (hit != null) {
+        it = hit.item;
+        while (it !=null && it.parent.className != "Layer") it = it.parent;
+    }
+   
+
+    if (currentFrame.selectedItems.length != 0) {
+        if (hit != null && it == currentFrame.rectangle) {
+            if (hit.type=="segment") currentFrame.selectedpoint = [hit.segment,null];
+        }
+        else if (event.modifiers.shift) {
+            if (hit != null && !currentFrame.selectedItems.includes(it)) {
+                it.selected = true;
+                currentFrame.selectedItems.push(it);
+                createRect();
+
             }
            
         }
-        else if (hit != null && hit.item == currentFrame.rectangle && hit.type=="segment") {
-            currentFrame.selectedpoint = [hit.segment,null];
-        }
-        
-        else if (!currentFrame.currentPath.contains(event.point)) {
-            // if (hit != null) {
-            //     //A COMPLETER
-            // }
-            currentFrame.currentPath = null;
-            currentFrame.selectedpoint = null;
-            currentFrame.rectangle.remove();
-            currentFrame.rectangle = null;
+       
+        else if (!selectedItemsContain(event.point)) {
+            emptySelectedItems(false);
+            if (hit != null) {
+                it.selected = true;
+                currentFrame.selectedItems = [it];
+                createRect();
+            }
         }
     }
     else {
         if (hit != null) {
-            currentFrame.currentPath =  new Group();
-            currentFrame.currentPath.addChild(hit.item);
-            currentFrame.selectedpoint = null;
-            createRect(currentFrame.currentPath);
            
+            it.selected = true;
+            currentFrame.selectedItems = [it];
+            createRect();
         }
     }
-  
-
-   
 }
 
-function scaleCurrentPath(origin, event) {
-    var c = event.point;
-    var d = event.delta;
-    if ((c-d-origin).x*(c-origin).x>0 && (c-d-origin).y*(c-origin).y>0) {
-        var ratiox = (c-origin).x / (c-d-origin).x;
-        var ratioy = (c-origin).y / (c-d-origin).y;
-        currentFrame.rectangle.scale(new Point(ratiox,ratioy),  origin);
-        currentFrame.rectangle.ppath.scale(new Point(ratiox,ratioy),  origin);
-    }
-}
 
 vectorEditor.onMouseDrag = function(event) {
-
-    if (Key.isDown('s') && currentFrame.currentPath != null) {
+    
+    if (Key.isDown('s')) {
         currentStyle.strokeWidth += event.delta.x/3;
-        currentFrame.currentPath.strokeWidth = currentStyle.strokeWidth ;
+        setSelectedItemsStroke();
+
     }
-    // else if (Key.isDown('r') && currentFrame.currentPath != null) {
-    //     for (var i=0; i<currentFrame.currentPath.segments.length;i++) {
-    //         currentFrame.currentPath.segments[i].point += (new Point(0.5,0.5) - Point.random())*event.delta.x;
-    //         // currentFrame.currentPath.segments[i].point.handleIn += (new Point(0.5,0.5) - Point.random())*10000*event.delta.x;
-    //         // currentFrame.currentPath.segments[i].point.handleOut += (new Point(0.5,0.5) - Point.random())*event.delta.x;
-    //     }
-    // }
     else if (currentFrame.selectedpoint == null && currentFrame.rectangle != null) {
-        currentFrame.rectangle.position += event.delta;
-        currentFrame.currentPath.position += event.delta;
+        moveRect(event.delta);
     }
     else if (currentFrame.selectedpoint != null) {
         var i = currentFrame.rectangle.segments.indexOf(currentFrame.selectedpoint[0]);
-    
         var correspondance = [5,6,null,null,null,0,1];
         if (i==0 || i==1 || i==5 || i==6) {
             if (event.modifiers.command) {
-                scaleCurrentPath(currentFrame.rectangle.position,event);
+                scaleRect(event,currentFrame.rectangle.position);
             }
             else {
-                scaleCurrentPath(currentFrame.rectangle.segments[correspondance[i]].point,event);
+                scaleRect(event,currentFrame.rectangle.segments[correspondance[i]].point);
             }
             
         }
@@ -238,10 +299,7 @@ vectorEditor.onMouseDrag = function(event) {
             var teta2 = event.point - currentFrame.rectangle.bounds.center;
             var alpha1 = (teta2 - event.delta).angle;
             var alpha2 = (teta2).angle;
-            // console.log(event.delta);
-            // console.log(currentFrame.currentPath);
-            currentFrame.rectangle.rotate(alpha2- alpha1);
-            currentFrame.rectangle.ppath.rotate(alpha2- alpha1);
+            rotateRect(alpha2 - alpha1 ); 
         }
     }
 }
@@ -254,26 +312,18 @@ vectorEditor.onKeyDown = function(event){
 
     shortcut(event);
     if (event.key == "backspace") {
-        if (currentFrame.selectedpoint == null && currentFrame.currentPath != null) {
-            // console.log(currentFrame.paths.indexOf(currentFrame.currentPath)-1);
-            currentFrame.paths.splice(currentFrame.paths.indexOf(currentFrame.currentPath),1);
-            currentFrame.currentPath.remove();
-            currentFrame.currentPath = null;
-            currentFrame.rectangle.remove();
-            currentFrame.rectangle = null;
-
-        }
+       emptySelectedItems(true);
     }
     else if (event.key == "=") {
-        if (currentFrame.currentPath != null) {
-            currentFrame.currentPath.bringToFront();
+        for (var j=0; j<currentFrame.selectedItems.length;j++) {
+            currentFrame.selectedItems[j].bringToFront();
         }
     }
     else if (event.key == "-") {
-        if (currentFrame.currentPath != null) {
-            currentFrame.currentPath.sendToBack();
-            rect.sendToBack();
+        for (var j=0; j<currentFrame.selectedItems.length;j++) {
+            currentFrame.selectedItems[j].sendToBack();
         }
+        rect.sendToBack();
     }
     
 }
@@ -292,26 +342,23 @@ pointEditor.onMouseDown = function(event) {
     var hit = project.hitTest(event.point, hitOptions);
     console.log(hit);
     if (hit != null) {
-        if (hit.type == "fill") {
+        if (!currentFrame.selectedItems.includes(hit.item)) {
+            emptySelectedItems(false);
+            hit.item.selected = true;
+            currentFrame.selectedItems.push(hit.item);
+        }
+        else if (hit.type == "fill") {
             if (currentFrame.selectedpoint != null) {
                 currentFrame.selectedpoint[0].selected = false;
                 currentFrame.selectedpoint = null;
             }
-            if (currentFrame.currentPath != null) {
-                currentFrame.currentPath.selected = false;
-            }
-            currentFrame.currentPath = new Group([hit.item]);
-            currentFrame.currentPath.selected = true;
         }
         else if (hit.type == "segment" || hit.type == "handle-in" || hit.type == "handle-out") {
-            if (currentFrame.currentPath != null) {
-                if (currentFrame.selectedpoint != null) {
-                    currentFrame.selectedpoint[0].selected = false;
-                }
-                currentFrame.selectedpoint = [hit.segment, hit.type];
-                hit.segment.selected =true;
+            if (currentFrame.selectedpoint != null) {
+                currentFrame.selectedpoint[0].selected = false;
             }
-
+            currentFrame.selectedpoint = [hit.segment, hit.type];
+            hit.segment.selected =true;
 
         }
         else if (hit.type == "stroke") { 
@@ -319,19 +366,13 @@ pointEditor.onMouseDown = function(event) {
                 currentFrame.selectedpoint[0].selected = false;
                 currentFrame.selectedpoint = null;
             }
-            if (currentFrame.currentPath != null) {
-                var curve = hit.location._curve;
-                curve.divideAt(curve.getLocationOf(hit.point));
-            }             
+            var curve = hit.location._curve;
+            curve.divideAt(curve.getLocationOf(hit.point));              
         }
     }
     
     else {
-        if (currentFrame.currentPath != null) {
-            currentFrame.currentPath.fullySelected = false;
-            currentFrame.selectedpoint = null;
-            currentFrame.currentPath = null;
-        }
+        emptySelectedItems(false);
     }
   
     
@@ -340,8 +381,8 @@ pointEditor.onMouseDown = function(event) {
 
 
 pointEditor.onMouseDrag = function(event) {
-    if (currentFrame.selectedpoint == null && currentFrame.currentPath!=null) {
-        currentFrame.currentPath.position += event.delta;
+    if (currentFrame.selectedpoint == null && currentFrame.selectedItems.length != 0) {
+        moveSelectedItems(event.delta);
     }
     if (currentFrame.selectedpoint !=null) {
         var ratio;
@@ -381,17 +422,11 @@ pointEditor.onKeyDown = function(event){
     if (event.key == "backspace") {
         console.log(currentFrame.selectedpoint);
         if (currentFrame.selectedpoint != null) {
+            console.log('remove p ');
             currentFrame.selectedpoint[0].path.removeSegment(currentFrame.selectedpoint[0].index);
+            currentFrame.selectedpoint = null;
         }
-        else if (currentFrame.currentPath != null) {
-            // console.log(currentFrame.paths.indexOf(currentFrame.currentPath)-1);
-            currentFrame.paths.splice(currentFrame.paths.indexOf(currentFrame.currentPath),1);
-            currentFrame.currentPath.remove();
-            currentFrame.currentPath = null;
-            currentFrame.rectangle.remove();
-            currentFrame.rectangle = null;
-    
-        }
+        else emptySelectedItems(true);
     }
 }
 
@@ -399,13 +434,12 @@ pointEditor.onKeyDown = function(event){
 
 //animator
 animator.onMouseDown = function(event) {
-    // console.log('current Path : ', currentFrame.currentPath.children);
 
     if (animpath != null) {
         animpath.remove();
         animpath = null;
     }
-    if (currentFrame.currentPath != null) {
+    if (currentFrame.selectedItems.length != 0) {
         animpath = new Path();
         animpath.fullySelected = true;    
         animpath.strokeColor = 'black';
@@ -427,60 +461,60 @@ animator.onMouseDrag = function(event) {
 
 animator.onMouseUp = function(event) {
     if (animpath != null) {
-        var index = [];
+        var selectedID = [];
+        var seen = [];
         var animpaths = [];
 
         console.log('animating : ');
 
-        // console.log('current Path : ', currentFrame.currentPath);
-        console.log('paths : ', currentFrame.paths);
-        for (var i=0; i<currentFrame.currentPath.children.length;i++) {
-            index.push(currentFrame.paths.indexOf(currentFrame.currentPath.children[i]));
-            animpaths.push(currentFrame.currentPath.children[i]);
+        for (var i=0; i<currentFrame.selectedItems.length;i++) {
+            selectedID.push(currentFrame.selectedItems[i].data.customID);
+            animpaths.push(currentFrame.selectedItems[i]);
+            seen.push(-1);
 
             
         }
-        console.log(animpaths);
+        console.log("IDs ",selectedID);
         animpath.simplify(100);
+
+        var delta;
         for (var i=1;i<10;i++){
-
+            delta = animpath.getLocationAt(i*animpath.length/10).point-animpath.getLocationAt(0).point;
             if (projectFrames.currentN<projectFrames.frames.length-1) {
-                // console.log('next');
                 document.getElementById('nextFrame').click();
-                // var npath = null;
-                for (var j=0; j<animpaths.length;j++) {
-
-                    if (index[j]>=currentFrame.paths.length) {
-                        currentFrame.paths.push(animpaths[j].clone());
-
-                    }
-                    animpaths[j] = currentFrame.paths[index[j]]
-                    
-                    // currentFrame.paths.push(npath);
-
-                    // animpaths[j] = npath;
-                }
             }
-            else {
-                
+            else { 
                 document.getElementById('newFrame').click();
-                // for (var j=0; j<animpaths.length;j++) {
-                //     animpaths[j] = currentFrame.paths[index[j]];
-                // }
             }
-            
-            for (var j=0; j<index.length;j++) {
-                console.log('j',index[j], currentFrame.paths);
-                currentFrame.paths[index[j]].position += animpath.getLocationAt(i*animpath.length/10).point-animpath.getLocationAt((i-1)*animpath.length/10).point;
-                // animpaths[j].position += animpath.getLocationAt(i*animpath.length/10).point-animpath.getLocationAt((i-1)*animpath.length/10).point;
+            console.log("frame : ",currentFrame);
 
+            var ind;
+            for (var j=0; j<currentFrame.paths.length;j++) {
+                // console.log("fp",currentFrame.paths[j]);
+                ind = selectedID.indexOf(currentFrame.paths[j].data.customID);
+                if (ind != -1) seen[ind] = j;
+
+            }
+            console.log(seen);
+
+
+
+            for (var j=0; j<selectedID.length;j++) {
+                if (seen[j] != -1) {
+                    currentFrame.paths[seen[j]].position = animpaths[j].position + delta; 
+                    seen[j] = -1;
+                }
+                else {
+                    currentFrame.paths.push(animpaths[j].clone());
+                    currentFrame.paths[currentFrame.paths.length - 1].position += delta;
+                    
+                }
             }
         }
         animpath.remove();
         animpath = null;
     }
-    currentFrame.currentPath = null;
-
+    emptySelectedItems(false);
 }
 
 animator.onKeyDown = function(event) {
@@ -493,7 +527,7 @@ function activateVectorCreator(){
     if (currentFrame.rectangle != null) {
         currentFrame.rectangle.remove();
         currentFrame.rectangle = null;
-        currentFrame.currentPath = null;
+        emptySelectedItems(false);
         currentFrame.selectedpoint = null;
     }
 }
@@ -501,11 +535,8 @@ function activateVectorCreator(){
 activateVE = activateVectorEditor;
 function activateVectorEditor(){
     vectorEditor.activate();
-    if (currentFrame.currentPath != null) {
-        currentFrame.currentPath.fullySelected = false;
-        // currentFrame.currentPath = null;
-        currentFrame.selectedpoint = null;
-        createRect(currentFrame.currentPath);
+    if (currentFrame.selectedItems.length != 0) {
+        createRect();
     }
 }
 
@@ -516,8 +547,6 @@ function activatePointEditor(){
     if (currentFrame.rectangle != null) {
         currentFrame.rectangle.remove();
         currentFrame.rectangle = null;
-        currentFrame.currentPath.selected = true;
-        currentFrame.selectedpoint = null;
     }
 }
 
@@ -529,13 +558,9 @@ function activateAnimator(){
     if (currentFrame.rectangle != null) {
         currentFrame.rectangle.remove();
         currentFrame.rectangle = null;
-        // currentFrame.currentPath = null;
     }
-    console.log('current Path : ', currentFrame.currentPath);
     currentFrame.selectedpoint = null;
-    if (currentFrame.currentPath != null) {
-        currentFrame.currentPath.selected = true;
-    }
+   
    
 
 }
