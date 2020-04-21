@@ -62,12 +62,12 @@ $ cd Downloads/A_nim-master
 
 You have to setup a local server in order to run A_nim. Try:
 ```shell
-$ python -m SimpleHTTPServer
+$ php -S localhost:8000
 ```
 or :
 
 ```shell
-$ php -S localhost:8000
+$ python -m SimpleHTTPServer
 ```
 
 
