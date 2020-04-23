@@ -20,7 +20,12 @@ Use it to move, resize and rotate a shape.
 
 Use it to adjust the individual nodes of a shape. 
 
-### Animator Tool
+### Sync
+
+Use it to add/modify the selected item on all frames.
+
+
+### Animator 
 
 Use it to move the selected shape along a path drawn when clicking and dragging.
 
@@ -41,12 +46,14 @@ Use it to compile your project into a GIF.
 
 Shortcuts can be pretty useful when working with A_nim:
 
-- P : Activate the Pen tool
-- V : Activate the Shape Editor tool
-- S + mouse drag : changes the stroke width (only available with the Shape Editor tool activated)
-- A : Activate the Node Editor tool
+- P : Pen tool
+- V : Shape Editor tool
+- A : Node Editor tool
+- S + Mouse Drag : changes the stroke width (only available with the Shape Editor tool activated)
 - B : Change the background color to current fill color
-
+- CTRL + G : Group/Ungroup selection
+- CTRL + C/V : Copy/Paste
+- Delete : Jump to first frame
 - Space : Jump to next frame
 - Enter : Play GIF
 
