@@ -19,16 +19,22 @@ var rect = new Path.Rectangle({
     point: [-1, -1],
     size: [view.size.width + 2, view.size.height + 2],
     strokeColor: 'white',
+    strokeWidth: 0,
     selected: false,
     locked: true,
+    insert: false,
 });
 rect.sendToBack();
 rect.fillColor = '#e0e0e0';
 
+var lay = project.activeLayer;
+project.insertLayer(0,new Layer(rect));
+lay.activate();
+
 //KEY SHORTCUTS
 function shortcut(event) {
     // console.log("frame : ",currentFrame.selectedItems);
-    console.log(currentFrame.selectedItems );
+    // console.log(currentFrame.selectedItems );
 
     //MODIFIERS
     if (event.key == "c" && (event.modifiers.control || event.modifiers.meta)) { //backgroundcolor
@@ -533,6 +539,8 @@ animator.onMouseDrag = function (event) {
 
 animator.onMouseUp = function (event) {
     if (animpath != null) {
+        animpath.remove();
+
         var selectedID = [];
         var seen = [];
         var animpaths = [];
@@ -550,8 +558,8 @@ animator.onMouseUp = function (event) {
         animpath.simplify(100);
 
         var delta;
-        for (var i = 1; i < 10; i++) {
-            delta = animpath.getLocationAt(i * animpath.length / 10).point - animpath.getLocationAt(0).point;
+        for (var i = 1; i < projectFrames.frameCount; i++) {
+            delta = animpath.getLocationAt(i * animpath.length / projectFrames.frameCount).point - animpath.getLocationAt(0).point;
             if (projectFrames.currentN < projectFrames.frames.length - 1) {
                 document.getElementById('nextFrame').click();
             }
@@ -562,18 +570,15 @@ animator.onMouseUp = function (event) {
 
             var ind;
             for (var j = 0; j < currentFrame.paths.length; j++) {
-                // console.log("fp",currentFrame.paths[j]);
                 ind = selectedID.indexOf(currentFrame.paths[j].data.customID);
                 if (ind != -1) seen[ind] = j;
-
             }
             console.log(seen);
-
-
 
             for (var j = 0; j < selectedID.length; j++) {
                 if (seen[j] != -1) {
                     currentFrame.paths[seen[j]].position = animpaths[j].position + delta;
+                    console.log('found');
                     seen[j] = -1;
                 }
                 else {
@@ -583,7 +588,6 @@ animator.onMouseUp = function (event) {
                 }
             }
         }
-        animpath.remove();
         animpath = null;
     }
     emptySelectedItems(false);

@@ -24,27 +24,6 @@ for (var i = 0; i < 4; i++) { //CHANGE HERE FOR THE CORRECT NUMBER OF ACTIVE BUT
   });
 }
 
-document.getElementById("import").onchange = function () {
-  console.log('import');
-  var fichierSelectionne = document.getElementById('import').files[0];
-  console.log(fichierSelectionne.size);
-
-  var options = {
-    expandShapes: true,
-    onLoad: function (item) {
-      console.log(item);
-      item.scale(1, view.size.width / view.size.height);
-      item.data.customID = projectFrames.ID;
-      projectFrames.ID++;
-      currentFrame.paths.push(item);
-      console.log(currentFrame.paths);
-    }
-  }
-
-  project.importSVG(fichierSelectionne, options);
-}
-
-
 
 
 function copyAttributes(item,source) {
@@ -102,3 +81,8 @@ document.getElementById("sync").onclick = function () {
   console.log('sync!');
 
 }
+
+
+
+
+

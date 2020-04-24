@@ -1,103 +1,137 @@
 <!DOCTYPE html>
 <html>
 <title>A_nim</title>
+
 <head>
-<link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="popup.css">
 
 
 
-<!-- gif  -->
-<script type="text/javascript" src="lib/jsgif/LZWEncoder.js"></script>
-<script type="text/javascript" src="lib/jsgif/NeuQuant.js"></script>
-<script type="text/javascript" src="lib/jsgif/GIFEncoder.js"></script>
-<script type="text/javascript" src="lib/jsgif/b64.js"></script>
-<!-- lib -->
-<script type="text/javascript" src="lib/paper-full.js"></script>
-<!-- script -->
-<script type="text/paperscript" src="src/model.js" canvas = 'myCanvas'></script>
-<script type="text/paperscript" src="src/buttons.js" canvas = 'myCanvas'></script>
-<script type="text/paperscript" src="src/tools.js" canvas = 'myCanvas'></script>
+    <!-- gif  -->
+    <script type="text/javascript" src="lib/jsgif/LZWEncoder.js"></script>
+    <script type="text/javascript" src="lib/jsgif/NeuQuant.js"></script>
+    <script type="text/javascript" src="lib/jsgif/GIFEncoder.js"></script>
+    <script type="text/javascript" src="lib/jsgif/b64.js"></script>
+    <!-- lib -->
+    <script type="text/javascript" src="lib/paper-full.js"></script>
+    <!-- script -->
+    <script type="text/paperscript" src="src/model.js" canvas='myCanvas'></script>
+    <script type="text/paperscript" src="src/buttons.js" canvas='myCanvas'></script>
+    <script type="text/paperscript" src="src/import_export.js" canvas='myCanvas'></script>
+    <script type="text/paperscript" src="src/settings.js" canvas='myCanvas'></script>
+
+    <script type="text/paperscript" src="src/tools.js" canvas='myCanvas'></script>
 
 
 </head>
 <div class="sidenav">
     <!-- <h1>Tools</h1> -->
-    <div id = 'tools'>
-        <a id = "VC" onclick="activateVC();" class = "tool active">
+    <div id='tools'>
+        <a id="VC" onclick="activateVC();" class="tool active">
             <img src="icons/vectorCreator.png" alt="Draw">
         </a>
-        <a id = "VE" onclick="activateVE();" class = "tool">
+        <a id="VE" onclick="activateVE();" class="tool">
             <img src="icons/vectorEditor.png" alt="Select">
         </a>
-        <a id = "PE" onclick="activatePE();" class = "tool">
+        <a id="PE" onclick="activatePE();" class="tool">
             <img src="icons/pointEditor.png" alt="Select Point">
         </a>
-        <a id = "sync" class ="btn" >
+        <a id="sync" class="btn">
             <img src="icons/refresh.png" alt="Sync shapes">
         </a>
-        <a id = "PE" onclick="activateA();" class = "tool">
+        <a id="PE" onclick="activateA();" class="tool">
             <img src="icons/animation.png" alt="Animate">
         </a>
 
-        <a class = "btn">
-            <input type="color" id="fillColor" name="fillColor"value="#af70eb">     
+        <a class="btn">
+            <input type="color" id="fillColor" name="fillColor" value="#af70eb">
         </a>
-        <a class = "btn">
+        <a class="btn">
             <input type="color" id="strokeColor" name="strokeColor" value="#f6b73c">
         </a>
 
-        
+
     </div>
 </div>
 
 <div class="sidenav2">
-    <div id = 'tools'>
+    <div id='tools'>
         <label for="import" class="btn"><img src="icons/import.png" alt="Import"></label>
 
         <input id="import" class="input-file" type="file" accept=".svg">
 
-            <!-- <img src="icons/import.png" alt="Import"> -->
+        <!-- <img src="icons/import.png" alt="Import"> -->
         </a>
-        <a id = "export" class ="btn" >
+        <a id="export" class="btn">
             <img src="icons/save.png" alt="Select Point">
+
         </a>
-        <!-- <a id = "settings" class ="btn" >
+        <a id="settings" class="btn">
             <img src="icons/settings.png" alt="Settings">
-        </a> -->
+        </a>
+
     </div>
 </div>
 
 
 <body>
-    
+
     <!-- <h1>Canvas</h1> -->
     <canvas id='myCanvas'>
         Canvas not supported
     </canvas>
 
     <h1></h1>
-    <a href = "#" id = "counter" class = "switch" >1/1</a>
-    <a id ="previousFrame" class = "switch">
-        <img src="icons/next.png" alt="Previous" style = " transform: scaleX(-1);">
+    <a href="#" id="counter" class="switch">1/1</a>
+    <a id="previousFrame" class="switch">
+        <img src="icons/next.png" alt="Previous" style=" transform: scaleX(-1);">
     </a>
-    <a id ="nextFrame" class = "switch">
+    <a id="nextFrame" class="switch">
         <img src="icons/next.png" alt="Next">
     </a>
-    <a id ="newFrame" class = "switch">
+    <a id="newFrame" class="switch">
         <img src="icons/new.png" alt="New">
     </a>
-    <a id ="deleteFrame" class = "switch" >
+    <a id="deleteFrame" class="switch">
         <img src="icons/delete.png" alt="Delete">
     </a>
 
-    <a id ="play" class = "switch">
-         
+    <a id="play" class="switch">
+
         <img src="icons/play.png" alt="Play">
         Play
     </a>
 
+    <div id="exportPopup" class="modal">
+        <!-- Modal content -->
+        <div class="modal-content">
+            <span id = "closeExport" class="close">&times;</span>
+            <a id="exportGif" class="btn">
+                Export as GIF
+            </a>
+            <a id="exportSvg"class="btn">
+                Export as SVG
+            </a>
+            <div id="myProgress">
+                <div id="myBar"></div>
+            </div>
+        </div>
+    </div>
 
-    
+    <div id="settingsPopup" class="modal">
+        <div class="modal-content">
+            <span id = "closeSettings" class="close">&times;</span>
+            <!-- <a id="Delay" class="btn">
+                Delay
+            </a> -->
+            <label>Delay :</label>
+            <input type="number" id="delay" min="5" max="1000" placeholder = "100" ><br><br>
+            <label>Anim tool frame count :</label>
+            <input type="number" id="frameCount" min="5" max="50" placeholder = "10" ><br><br>
+        </div>
+    </div>
+
 
     <!-- <h1>Tools</h1>
     <div id = 'tools'>
@@ -111,8 +145,8 @@
             <img src="icons/pointEditor.png" alt="Select Point">
         </a>
     </div> -->
-    
-<!-- 
+
+    <!-- 
 
     <h1>Style</h1>
     <div id = 'box'>
@@ -130,8 +164,8 @@
             <input type="range" min="0" max="100" value="5" class="slider" id="strokeSlider" >
         </div> 
     </div> -->
-    
-    
-</body>
-</html>
 
+
+</body>
+
+</html>
