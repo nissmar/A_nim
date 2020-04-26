@@ -47,15 +47,7 @@ projectFrames = {
 //frames
 globalFunc.updateFrame = function() { //used when changing frame
     // console.log((projectFrames.currentN + 1));
-
-    for (var j = 0; j < currentFrame.selectedItems.length; j++) {
-        currentFrame.selectedItems[j].selected = false;
-    }
-    currentFrame.selectedpoint = null;
-    if (currentFrame.rectangle != null) {
-        currentFrame.rectangle.remove();
-        currentFrame.rectangle = null;
-    }
+    globalFunc.emptySelectedItems(false);
 
     currentFrame.layer.visible = false;
 
@@ -89,7 +81,7 @@ document.getElementById("newFrame").onclick = function () { //moving to next fra
     }
 
     var newF = createFrame();
-    for (var j = 0; j < currentFrame.selectedItems.length; j++) currentFrame.selectedItems[j].selected = false;
+    globalFunc.emptySelectedItems(false);
     // console.log('new frame');
     
     newF.layer = currentFrame.layer.clone();
