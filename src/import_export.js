@@ -1,6 +1,7 @@
 //IMPORT
 
 document.getElementById("import").onchange = function () {
+  globalFunc.emptySelectedItems(false);
   console.log('import');
   var fichierSelectionne = document.getElementById('import').files[0];
   console.log(fichierSelectionne.size);
@@ -10,7 +11,6 @@ document.getElementById("import").onchange = function () {
     expandShapes: true,
     insert : false,
     onLoad: function (item) {
-      
       for (var i=0;i<item.children.length;i++) {
         // console.log(item.children[i],i);
 
@@ -20,11 +20,9 @@ document.getElementById("import").onchange = function () {
         }
         document.getElementById("newFrame").click();
       }
-      item.scale(1, view.size.width / view.size.height);
-      item.data.customID = projectFrames.ID;
-      projectFrames.ID++;
-      currentFrame.paths.push(item);
-      console.log(currentFrame.paths);
+      // item.scale(1, view.size.width / view.size.height);
+      // item.data.customID = projectFrames.ID;
+      // projectFrames.ID++;
     }
   }
 
@@ -72,3 +70,57 @@ window.onclick = function(event) {
 }
 
 
+
+document.getElementById("exportGif").onclick = function () {
+  globalFunc.emptySelectedItems(false);
+    
+  var myBar = document.getElementById("myBar");
+
+  var encoder = new GIFEncoder();
+  encoder.setRepeat(0); //0  -> loop forever //1+ -> loop n times then stop
+  encoder.setDelay(projectFrames.delay); //go to next frame every n milliseconds
+  encoder.start();
+  var context = document.getElementById('myCanvas').getContext('2d');
+  context.setFill = "#e0e0e0";
+  document.getElementById("myProgress").style.display = "block";
+
+
+  var N = projectFrames.frames.length;
+  function update0() {
+
+      projectFrames.currentN++;
+      myBar.style.width = 100*(projectFrames.currentN+1)/N +"%";
+      globalFunc.updateFrame();
+      console.log(encoder);
+      encoder.addFrame(context);
+  }
+  function finish() {
+      encoder.finish();
+      document.getElementById("myProgress").style.display = "none";
+      // var data_url = 'data:image/gif;base64,'+encode64(encoder.stream().getData());
+      // document.getElementById('image').src = data_url;
+      encoder.download("download.gif");
+  }
+
+
+  projectFrames.currentN = -1;
+  for (var i = 0; i < projectFrames.frames.length; i++) {
+      console.log("i : ", i);
+      setTimeout(update0, 10 * i);
+  }
+  setTimeout(finish, 10 * projectFrames.frames.length);
+}
+
+
+
+
+
+document.getElementById("exportSvg").onclick = function () {
+  globalFunc.emptySelectedItems(false);
+  var fileName = "A_nim.svg"
+  var url = "data:image/svg+xml;utf8," + encodeURIComponent(paper.project.exportSVG({asString:true}));
+  var link = document.createElement("a");
+  link.download = fileName;
+  link.href = url;
+  link.click();
+}

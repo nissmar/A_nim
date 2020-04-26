@@ -14,6 +14,7 @@ var animator = new Tool(); //to animate curve
 var animpath = null;
 
 
+
 // Background
 var rect = new Path.Rectangle({
     point: [-1, -1],
@@ -22,26 +23,24 @@ var rect = new Path.Rectangle({
     strokeWidth: 0,
     selected: false,
     locked: true,
-    insert: false,
+    // insert: false,
+    index: -1,
 });
 rect.sendToBack();
 rect.fillColor = '#e0e0e0';
 
 var lay = project.activeLayer;
-project.insertLayer(0,new Layer(rect));
+project.insertLayer(0, new Layer(rect));
 lay.activate();
 
 //KEY SHORTCUTS
 function shortcut(event) {
-    // console.log("frame : ",currentFrame.selectedItems);
-    // console.log(currentFrame.selectedItems );
-
     //MODIFIERS
     if (event.key == "c" && (event.modifiers.control || event.modifiers.meta)) { //backgroundcolor
         projectFrames.clipboard = [];
         for (var j = 0; j < currentFrame.selectedItems.length; j++) {
-            console.log(currentFrame.selectedItems[j]);
             var p = currentFrame.selectedItems[j].clone(insert = false);
+            p.selected = false;
             // p.visible = false;
             // p.selected = false;
             projectFrames.clipboard.push(p);
@@ -49,53 +48,53 @@ function shortcut(event) {
     }
 
     else if (event.key == "v" && (event.modifiers.control || event.modifiers.meta)) { //paste
-        console.log(projectFrames.clipboard);
         for (var j = 0; j < projectFrames.clipboard.length; j++) {
-            var p = projectFrames.clipboard[j].clone();
-            paper.project.activeLayer.addChild(p);
+            // var p = projectFrames.clipboard[j];
+            currentFrame.layer.addChild(projectFrames.clipboard[j].clone());
             // p.visible = true;
-            currentFrame.paths.push(p);
 
         }
     }
 
     else if (event.key == "g" && (event.modifiers.control || event.modifiers.meta)) { //group
         var g;
-        
+
         var n = currentFrame.selectedItems.length;
-        if (n==1 && currentFrame.selectedItems[0].className == 'Group') { //ungroup
+        if (n == 1 && currentFrame.selectedItems[0].className == 'Group') { //ungroup
             g = currentFrame.selectedItems[0];
-            emptySelectedItems();
+            globalFunc.emptySelectedItems(false);
             var l = g.removeChildren();
-            g.parent.insertChildren(g.index,  l);
-            for (var j = 0; j < l.length; j++) {
-                currentFrame.paths.push(l[j]);
-                // paper.project.activeLayer.addChild(p);
-            }
+            g.parent.insertChildren(g.index, l);
+            // for (var j = 0; j < l.length; j++) {
+            //     currentFrame.paths.push(l[j]);
+            //     // paper.project.activeLayer.addChild(p);
+            // }
             g.remove();
             return;
         }
 
-        g = new Group(insert = false);
-        function t(a,b) {
-            return a.index>=b.index;
+        g = new Group();
+        function t(a, b) {
+            return a.index >= b.index;
         }
         currentFrame.selectedItems.sort(t);
+
+        var ind = currentFrame.selectedItems[n - 1].index;
         for (var j = 0; j < n; j++) {
-
-            g.addChild(currentFrame.selectedItems[j].clone());
-            console.log(currentFrame.selectedItems[j].index);
-            g.data.customID = projectFrames.ID;
-            projectFrames.ID++;
-            
+            g.addChild(currentFrame.selectedItems[j]);
         }
-        console.log(currentFrame.selectedItems[n-1].index);
-        paper.project.activeLayer.insertChild(currentFrame.selectedItems[n-1].index,g);
-        emptySelectedItems(true);
+        g.data.customID = projectFrames.ID;
+        projectFrames.ID++;
 
-        currentFrame.paths.push(g);
-        currentFrame.selectedItems = [g];
-        createRect();
+        g.remove();
+
+        currentFrame.layer.insertChild(ind - n + 1, g);
+
+        globalFunc.emptySelectedItems(false);
+
+        // currentFrame.selectedItems = [g];
+        // createRect();
+        console.log(currentFrame.layer);
     }
 
     //REGULAR
@@ -153,18 +152,10 @@ function closePath(path) {
 
 //selection management
 
-function emptySelectedItems(remove) {
+globalFunc.emptySelectedItems = function(remove) {
     for (var j = 0; j < currentFrame.selectedItems.length; j++) {
-        console.log(currentFrame.selectedItems)
         currentFrame.selectedItems[j].selected = false;
-        if (remove) {
-            var k = currentFrame.paths.indexOf(currentFrame.selectedItems[j]);
-            if (k !=-1) {
-                currentFrame.paths.splice(k,1);
-            }
-            currentFrame.selectedItems[j].remove();
-
-        }
+        if (remove) currentFrame.selectedItems[j].remove();
     }
     currentFrame.selectedItems = [];
     currentFrame.selectedpoint = null;
@@ -204,7 +195,7 @@ vectorCreator.onMouseDown = function (event) {
         if (newpath.segments.length > 0) {
             if ((event.point - newpath.segments[0].point).length < mindistance) {
                 closePath(newpath);
-                currentFrame.paths.push(newpath);
+                // currentFrame.paths.push(newpath);
                 newpath = null;
             }
             else newpath.add(event.point);
@@ -330,7 +321,7 @@ vectorEditor.onMouseDown = function (event) {
         }
 
         else if (!selectedItemsContain(event.point)) {
-            emptySelectedItems(false);
+            globalFunc.emptySelectedItems(false);
             if (hit != null) {
                 it.selected = true;
                 currentFrame.selectedItems = [it];
@@ -388,7 +379,7 @@ vectorEditor.onKeyDown = function (event) {
 
     shortcut(event);
     if (event.key == "backspace") {
-        emptySelectedItems(true);
+        globalFunc.emptySelectedItems(true);
         newpath = null;
 
     }
@@ -418,39 +409,40 @@ pointEditor.onMouseDown = function (event) {
         tolerance: 5,
     };
     var hit = project.hitTest(event.point, hitOptions);
-    console.log(hit);
     if (hit != null) {
-        if (!currentFrame.selectedItems.includes(hit.item)) {
-            emptySelectedItems(false);
+        if (currentFrame.selectedItems.includes(hit.item)) {
+            if (hit.type == "fill") {
+                if (currentFrame.selectedpoint != null) {
+                    currentFrame.selectedpoint[0].selected = false;
+                    currentFrame.selectedpoint = null;
+                }
+            }
+            else if (hit.type == "segment" || hit.type == "handle-in" || hit.type == "handle-out") {
+                if (currentFrame.selectedpoint != null) {
+                    currentFrame.selectedpoint[0].selected = false;
+                }
+                currentFrame.selectedpoint = [hit.segment, hit.type];
+                hit.segment.selected = true;
+    
+            }
+            else if (hit.type == "stroke") {
+                if (currentFrame.selectedpoint != null) {
+                    currentFrame.selectedpoint[0].selected = false;
+                    currentFrame.selectedpoint = null;
+                }
+                var curve = hit.location._curve;
+                curve.divideAt(curve.getLocationOf(hit.point));
+            }
+        }
+        else {
+            globalFunc.emptySelectedItems(false);
             hit.item.selected = true;
             currentFrame.selectedItems.push(hit.item);
-        }
-        else if (hit.type == "fill") {
-            if (currentFrame.selectedpoint != null) {
-                currentFrame.selectedpoint[0].selected = false;
-                currentFrame.selectedpoint = null;
-            }
-        }
-        else if (hit.type == "segment" || hit.type == "handle-in" || hit.type == "handle-out") {
-            if (currentFrame.selectedpoint != null) {
-                currentFrame.selectedpoint[0].selected = false;
-            }
-            currentFrame.selectedpoint = [hit.segment, hit.type];
-            hit.segment.selected = true;
-
-        }
-        else if (hit.type == "stroke") {
-            if (currentFrame.selectedpoint != null) {
-                currentFrame.selectedpoint[0].selected = false;
-                currentFrame.selectedpoint = null;
-            }
-            var curve = hit.location._curve;
-            curve.divideAt(curve.getLocationOf(hit.point));
         }
     }
 
     else {
-        emptySelectedItems(false);
+        globalFunc.emptySelectedItems(false);
     }
 
 
@@ -498,13 +490,12 @@ pointEditor.onMouseUp = function (event) {
 pointEditor.onKeyDown = function (event) {
     shortcut(event);
     if (event.key == "backspace") {
-        console.log(currentFrame.selectedpoint);
         if (currentFrame.selectedpoint != null) {
             console.log('remove p ');
             currentFrame.selectedpoint[0].path.removeSegment(currentFrame.selectedpoint[0].index);
             currentFrame.selectedpoint = null;
         }
-        else emptySelectedItems(true);
+        else globalFunc.emptySelectedItems(true);
     }
 }
 
@@ -544,6 +535,7 @@ animator.onMouseUp = function (event) {
         var selectedID = [];
         var seen = [];
         var animpaths = [];
+        var framen = projectFrames.currentN;
 
         console.log('animating : ');
 
@@ -559,38 +551,41 @@ animator.onMouseUp = function (event) {
 
         var delta;
         for (var i = 1; i < projectFrames.frameCount; i++) {
+            console.log("Layer ", currentFrame.layer);
             delta = animpath.getLocationAt(i * animpath.length / projectFrames.frameCount).point - animpath.getLocationAt(0).point;
+
             if (projectFrames.currentN < projectFrames.frames.length - 1) {
                 document.getElementById('nextFrame').click();
             }
             else {
                 document.getElementById('newFrame').click();
             }
-            console.log("frame : ", currentFrame);
 
             var ind;
-            for (var j = 0; j < currentFrame.paths.length; j++) {
-                ind = selectedID.indexOf(currentFrame.paths[j].data.customID);
+            for (var j = 0; j < currentFrame.layer.children.length; j++) {
+                ind = selectedID.indexOf(currentFrame.layer.children[j].data.customID);
                 if (ind != -1) seen[ind] = j;
             }
-            console.log(seen);
 
             for (var j = 0; j < selectedID.length; j++) {
                 if (seen[j] != -1) {
-                    currentFrame.paths[seen[j]].position = animpaths[j].position + delta;
-                    console.log('found');
+                    currentFrame.layer.children[seen[j]].position = animpaths[j].position + delta;
                     seen[j] = -1;
                 }
                 else {
-                    currentFrame.paths.push(animpaths[j].clone());
-                    currentFrame.paths[currentFrame.paths.length - 1].position += delta;
+                    var p = animpaths[j].clone(insert = false);
+                    currentFrame.layer.insertChild(p.index,p);
+                    p.position += delta;
 
                 }
             }
         }
         animpath = null;
     }
-    emptySelectedItems(false);
+    projectFrames.currentN = framen - 1;
+    document.getElementById('nextFrame').click();
+
+    globalFunc.emptySelectedItems(false);
 }
 
 animator.onKeyDown = function (event) {
@@ -603,7 +598,7 @@ function activateVectorCreator() {
     if (currentFrame.rectangle != null) {
         currentFrame.rectangle.remove();
         currentFrame.rectangle = null;
-        emptySelectedItems(false);
+        globalFunc.emptySelectedItems(false);
         currentFrame.selectedpoint = null;
     }
 }
@@ -640,3 +635,4 @@ function activateAnimator() {
 
 
 }
+

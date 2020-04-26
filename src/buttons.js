@@ -25,24 +25,6 @@ for (var i = 0; i < 4; i++) { //CHANGE HERE FOR THE CORRECT NUMBER OF ACTIVE BUT
 }
 
 
-
-function copyAttributes(item,source) {
-  if (item.className == 'Group') {
-    for (var k = 0; k < item.children.length; k++) {
-      copyAttributes(item.children[k],source.children[k]);
-    }
-  }
-  else {
-    var pos = item.position;
-    item.segments = source.segments;
-    item.position = pos;
-    item.fillColor = source.fillColor;
-    item.strokeColor = source.strokeColor;
-    item.strokeWidth = source.strokeWidth;
-  }
-
-}
-
 document.getElementById("sync").onclick = function () {
 
   var curr = projectFrames.currentN;
@@ -50,38 +32,32 @@ document.getElementById("sync").onclick = function () {
 
   var selectedID = [];
   var spaths = [];
-  var seen = [];
   for (var i = 0; i < currentFrame.selectedItems.length; i++) {
-    selectedID.push(currentFrame.selectedItems[i].data.customID);
-    spaths.push(currentFrame.selectedItems[i]);
-    seen.push(false);
+      selectedID.push(currentFrame.selectedItems[i].data.customID);
+      spaths.push(currentFrame.selectedItems[i]);
   }
+  globalFunc.emptySelectedItems(false);
   for (var i = 0; i < projectFrames.frames.length; i++) {
-    document.getElementById('nextFrame').click();
-    var ind;
-    if (i != curr) {
-      for (var j = 0; j < currentFrame.paths.length; j++) {
-        ind = selectedID.indexOf(currentFrame.paths[j].data.customID);
-        if (ind != -1) {
-          seen[ind] = true;
-          copyAttributes(currentFrame.paths[j],spaths[ind]);
-        }
+      document.getElementById('nextFrame').click();
+      var ind;
+      if (i != curr) {
+          for (var j = 0; j < currentFrame.layer.children.length; j++) {
+              ind = selectedID.indexOf(currentFrame.layer.children[j].data.customID);
+              if (ind != -1) {
+                  currentFrame.layer.children[j].remove();
+              }
+          }
+          for (var j = 0; j < spaths.length; j++) {
+              var p = spaths[j].clone(insert = false);
+              currentFrame.layer.insertChild(p.index,p);
+          }
+
       }
-      for (var j = 0; j < seen.length; j++) {
-        if (!seen[j]) {
-          currentFrame.paths.push(spaths[j].clone());
-        }
-        seen[j] = false;
-      }
-    
-    }
   }
-  projectFrames.currentN = curr -1;
+  projectFrames.currentN = curr - 1;
   document.getElementById('nextFrame').click();
-  console.log('sync!');
 
 }
-
 
 
 
