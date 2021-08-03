@@ -4,7 +4,7 @@
 <img src="A_nim.gif">
 
 
-This a project I developped on my spare time. Based on Paper.js, it allows the user to create custom gifs using vector graphics.
+This project is based on Paper.js, it allows the user to create custom gifs using vector graphics.
 
 ## Tools
 
